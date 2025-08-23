@@ -1,20 +1,39 @@
 #include<imu.h>
 
-int16_t accel_x_buf = 0;
-int16_t accel_y_buf = 0;
-int16_t accel_z_buf = 0;
-
-int16_t gyro_x_buf = 0;
-int16_t gyro_y_buf = 0;
-int16_t gyro_z_buf = 0;
-
 static Acceleration_Vec accel_vec;
 static Euler_Rotation_Vec rotation_vec;
 static float accel_multiplier = 4096.0f; // LSB/g
 static float gyro_multiplier = 32.8f;  // LSB/deg/s
 
-void imu_set_power_state(char i2c_addr) {
-  Wire.beginTransmission((uint8_t)i2c_addr);
+float accel_sens_float(Accel_Sensitivity_t sens_) {
+  switch(sens_) {
+    case Accel_Sensitivity_t::g2:  return 16384.0f;
+    case Accel_Sensitivity_t::g4:  return 8192.0f;
+    case Accel_Sensitivity_t::g8:  return 4096.0f;
+    case Accel_Sensitivity_t::g16: return 2048.0f;
+    default:                       return 4096.0f;
+  }
+}
+
+float gyro_sens_float(Gyro_Sensitivity_t sens_) {
+  switch(sens_) {
+    case Gyro_Sensitivity_t::dps250 :  return 131.0f;
+    case Gyro_Sensitivity_t::dps500 :  return 62.5f;
+    case Gyro_Sensitivity_t::dps1000:  return 32.8f;
+    case Gyro_Sensitivity_t::dps2000:  return 16.4f;
+    default:                           return 131.0f;
+  }
+}
+
+IMU::IMU(char i2c_addr_, Accel_Sensitivity_t sens_a_, Gyro_Sensitivity_t sens_g_) :
+  i2c_addr(i2c_addr_),
+  accel_multiplier(accel_sens_float(sens_a_)), 
+  gyro_multiplier(gyro_sens_float(sens_g_)),
+  sens_a(sens_a_),
+  sens_g(sens_g_) {}
+
+void IMU::set_power_state() {
+  Wire.beginTransmission((uint8_t)this->i2c_addr);
   Wire.write(0x6B); // "PWR_MGMT_1" register
   Wire.write(0x00); // H_RESET, SLEEP, CYCLE, GYRO_STANDBY, PD_PTAT = 0, CLKSEL = 00 (Internal 20MHz clock)
   Wire.endTransmission();
@@ -22,79 +41,64 @@ void imu_set_power_state(char i2c_addr) {
   return;
 }
 
-void gyro_set_sens(char i2c_addr, Gyro_Sensitivity_t sens) {
-  Wire.beginTransmission((uint8_t)i2c_addr);
+void IMU::gyro_set_sens() {
+  Wire.beginTransmission((uint8_t)this->i2c_addr);
   Wire.write(0x1B); // "GYRO_CONFIG" register
-  Wire.write((uint8_t)sens);
+  Wire.write((uint8_t)this->sens_g);
   Wire.endTransmission();
 
   return;
 }
 
-void accel_set_sens(char i2c_addr, Accel_Sensitivity_t sens) {
-  Wire.beginTransmission((uint8_t)i2c_addr);
+void IMU::accel_set_sens() {
+  Wire.beginTransmission((uint8_t)this->i2c_addr);
   Wire.write(0x1C); // "ACCEL_CONFIG" register
-  Wire.write((uint8_t)sens);
+  Wire.write((uint8_t)this->sens_a);
   Wire.endTransmission();
 
   return;
 }
 
-void imu_init(char i2c_addr, Accel_Sensitivity_t sens_a, Gyro_Sensitivity_t sens_g) {
+void IMU::init() {
   // Accelerometer start
   Wire.setClock(400000);
   Wire.begin();
   delay(250);
 
-  imu_set_power_state(i2c_addr);
+  IMU::set_power_state();
   
-  accel_set_sens(i2c_addr, sens_a);
-  gyro_set_sens(i2c_addr, sens_g);
-
-  switch(sens_a) {
-    case Accel_Sensitivity_t::g2:  accel_multiplier = 16384.0f;
-    case Accel_Sensitivity_t::g4:  accel_multiplier = 8192.0f;
-    case Accel_Sensitivity_t::g8:  accel_multiplier = 4096.0f;
-    case Accel_Sensitivity_t::g16: accel_multiplier = 2048.0f;
-    default:                       accel_multiplier = 4096.0f;
-  }
-
-  switch(sens_g) {
-    case Gyro_Sensitivity_t::dps250 :  gyro_multiplier = 131.0f;
-    case Gyro_Sensitivity_t::dps500 :  gyro_multiplier = 62.5f;
-    case Gyro_Sensitivity_t::dps1000:  gyro_multiplier = 32.8f;
-    case Gyro_Sensitivity_t::dps2000:  gyro_multiplier = 16.4f;
-    default:                           gyro_multiplier = 32.8f;
-  }
+  IMU::accel_set_sens();
+  IMU::gyro_set_sens();
   
   return;
 }
-
-Acceleration_Vec read_accel(char i2c_addr) {
-  Wire.beginTransmission((uint8_t)i2c_addr);
+void IMU::read_accel() {
+  Wire.beginTransmission((uint8_t)this->i2c_addr);
   Wire.write(0x3B); // "ACCEL_XOUT_H"
   Wire.endTransmission();
 
-  Wire.requestFrom((uint8_t)i2c_addr, 6);
+  Wire.requestFrom((uint8_t)this->i2c_addr, 6);
 
-  accel_vec.x = (Wire.read()<<8 | Wire.read()) / accel_multiplier;
-  accel_vec.y = (Wire.read()<<8 | Wire.read()) / accel_multiplier;
-  accel_vec.z = (Wire.read()<<8 | Wire.read()) / accel_multiplier;
+  this->accel_vec.x = read16() / this->accel_multiplier;
+  this->accel_vec.y = read16() / this->accel_multiplier;
+  this->accel_vec.z = read16() / this->accel_multiplier;
 
-  return accel_vec;
+  return;
 }
-
-Euler_Rotation_Vec read_gyro(char i2c_addr) {
-  Wire.beginTransmission((uint8_t)i2c_addr);
+void IMU::read_gyro() {
+  Wire.beginTransmission((uint8_t)this->i2c_addr);
   Wire.write(0x43); // "GYRO_XOUT_H"
   Wire.endTransmission();
 
-  Wire.requestFrom((uint8_t)i2c_addr, 6);
+  Wire.requestFrom((uint8_t)this->i2c_addr, 6);
 
-  rotation_vec.x = (Wire.read()<<8 | Wire.read()) / gyro_multiplier;
-  rotation_vec.y = (Wire.read()<<8 | Wire.read()) / gyro_multiplier;
-  rotation_vec.z = (Wire.read()<<8 | Wire.read()) / gyro_multiplier;
+  this->rotation_vec.x = read16() / this->gyro_multiplier;
+  this->rotation_vec.y = read16() / this->gyro_multiplier;
+  this->rotation_vec.z = read16() / this->gyro_multiplier;
 
-  return rotation_vec;
+  return;
 }
 
+inline uint16_t IMU::read16() {
+  return uint16_t(Wire.read()<<8 | Wire.read());
+}

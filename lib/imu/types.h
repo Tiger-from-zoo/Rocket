@@ -17,6 +17,8 @@ enum class Gyro_Sensitivity_t : uint8_t {
     dps2000 = 0x18
 };
 
+// enum class Gyro_DLPF_t : 
+
 typedef struct {
     float x = 0.0f;
     float y = 0.0f;

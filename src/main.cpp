@@ -34,6 +34,8 @@ void loop() {
             Serial.println(gps.location.lng());
             Serial.print("H: ");
             Serial.println(gps.altitude.meters());
+            Serial.print("Speed: ");
+            Serial.println(gps.speed.mps());
             
         }
     }
