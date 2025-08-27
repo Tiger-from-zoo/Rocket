@@ -1,7 +1,6 @@
 #include<imu.h>
 
 constexpr uint8_t bytes_6 = 6;
-float x, y, z;
 
 float accel_sens_float(Accel_Sensitivity_t sens_) {
   switch(sens_) {
