@@ -1,0 +1,35 @@
+// #include <imu.h>
+// #include<Wire.h>
+#include <types.h>
+#include <iostream>
+ 
+// The TinyGPS++ object
+// TinyGPSPlus gps;
+
+// HardwareSerial SerialGPS(2);
+
+// IMU imu(0x68, Accel_Sensitivity_t::g4, Gyro_Sensitivity_t::dps500);
+// Acceleration_Vec acv = imu.accel_vec;
+// Euler_Rotation_Vec erv = imu.rotation_vec;
+
+class X {
+    public:
+    Accel_Sensitivity_t x;
+    
+    void print() {
+
+        std::cout << (uint8_t)this->x << std::endl;
+
+        return;
+    }
+};
+
+
+int main() {
+    X f;
+    f.x = Accel_Sensitivity_t::g16;
+    std::cout << "Test" << std::endl;
+    f.print();
+
+    return 0;
+}

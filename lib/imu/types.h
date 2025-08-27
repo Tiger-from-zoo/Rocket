@@ -7,7 +7,7 @@ enum class Accel_Sensitivity_t : uint8_t {
     g2  = 0x00,
     g4  = 0x08,
     g8  = 0x10,
-    g16 = 0x18
+    g16 = 0x34
 };
 
 enum class Gyro_Sensitivity_t : uint8_t {
