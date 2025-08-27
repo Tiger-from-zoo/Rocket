@@ -90,9 +90,9 @@ void IMU::read_gyro() {
   Wire.endTransmission();
 
   Wire.requestFrom(this->i2c_addr, bytes_6);
-  this->rotation_vec.x = static_cast<float>(read16() / this->accel_multiplier);
-  this->rotation_vec.y = static_cast<float>(read16() / this->accel_multiplier);
-  this->rotation_vec.z = static_cast<float>(read16() / this->accel_multiplier);
+  this->rotation_vec.x = static_cast<float>(read16() / this->gyro_multiplier);
+  this->rotation_vec.y = static_cast<float>(read16() / this->gyro_multiplier);
+  this->rotation_vec.z = static_cast<float>(read16() / this->gyro_multiplier);
 
   return;
 }
