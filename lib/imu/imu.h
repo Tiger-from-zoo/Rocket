@@ -11,7 +11,17 @@ class IMU {
     Euler_Rotation_Vec rotation_vec;
     Acceleration_Vec accel_vec;
 
-    IMU(uint8_t i2c_addr_, Accel_Sensitivity_t sens_a_, Gyro_Sensitivity_t sens_g_);
+    IMU(
+        uint8_t i2c_addr_,
+        Accel_Sensitivity_t sens_a_,
+        Gyro_Sensitivity_t sens_g_,
+        float accel_x_offset_,
+        float accel_y_offset_,
+        float accel_z_offset_,
+        float gyro_x_offset_,
+        float gyro_y_offset_,
+        float gyro_z_offset_
+    );
 
     void init();
 
@@ -27,6 +37,13 @@ class IMU {
     const float accel_multiplier; // LSB/g
     const float gyro_multiplier;  // LSB/deg/s
 
+    const float accel_x_offset;
+    const float accel_y_offset;
+    const float accel_z_offset;
+    const float gyro_x_offset;
+    const float gyro_y_offset;
+    const float gyro_z_offset;
+    
     void set_power_state(uint8_t pwr_state_);
     void gyro_set_sens();
     void accel_set_sens();

@@ -22,12 +22,28 @@ float gyro_sens_float(Gyro_Sensitivity_t sens_) {
   }
 }
 
-IMU::IMU(uint8_t i2c_addr_, Accel_Sensitivity_t sens_a_, Gyro_Sensitivity_t sens_g_) :
+IMU::IMU(
+  uint8_t i2c_addr_,
+  Accel_Sensitivity_t sens_a_,
+  Gyro_Sensitivity_t sens_g_,
+  float accel_x_offset_,
+  float accel_y_offset_,
+  float accel_z_offset_,
+  float gyro_x_offset_,
+  float gyro_y_offset_,
+  float gyro_z_offset_
+) :
   i2c_addr(i2c_addr_),
   accel_multiplier(accel_sens_float(sens_a_)), 
   gyro_multiplier(gyro_sens_float(sens_g_)),
   sens_a(sens_a_),
-  sens_g(sens_g_) {}
+  sens_g(sens_g_), 
+  accel_x_offset(accel_x_offset_),
+  accel_y_offset(accel_y_offset_),
+  accel_z_offset(accel_z_offset_),
+  gyro_x_offset(gyro_x_offset_),
+  gyro_y_offset(gyro_y_offset_),
+  gyro_z_offset(gyro_z_offset_) {}
 
 void IMU::set_power_state(uint8_t pwr_state_) {
   Wire.beginTransmission(this->i2c_addr);
@@ -77,9 +93,9 @@ void IMU::read_accel() {
   Wire.endTransmission();
 
   Wire.requestFrom(this->i2c_addr, bytes_6);
-  this->accel_vec.x = static_cast<float>(read16() / this->accel_multiplier);
-  this->accel_vec.y = static_cast<float>(read16() / this->accel_multiplier);
-  this->accel_vec.z = static_cast<float>(read16() / this->accel_multiplier);
+  this->accel_vec.x = static_cast<float>(read16() / this->accel_multiplier) + accel_x_offset;
+  this->accel_vec.y = static_cast<float>(read16() / this->accel_multiplier) + accel_y_offset;
+  this->accel_vec.z = static_cast<float>(read16() / this->accel_multiplier) + accel_z_offset;
 
   return;
 }
@@ -90,9 +106,9 @@ void IMU::read_gyro() {
   Wire.endTransmission();
 
   Wire.requestFrom(this->i2c_addr, bytes_6);
-  this->rotation_vec.x = static_cast<float>(read16() / this->gyro_multiplier);
-  this->rotation_vec.y = static_cast<float>(read16() / this->gyro_multiplier);
-  this->rotation_vec.z = static_cast<float>(read16() / this->gyro_multiplier);
+  this->rotation_vec.x = static_cast<float>(read16() / this->gyro_multiplier) + gyro_x_offset;
+  this->rotation_vec.y = static_cast<float>(read16() / this->gyro_multiplier) + gyro_y_offset;
+  this->rotation_vec.z = static_cast<float>(read16() / this->gyro_multiplier) + gyro_z_offset;
 
   return;
 }

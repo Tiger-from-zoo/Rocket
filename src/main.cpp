@@ -26,7 +26,17 @@ double avg_z = 0;
 
 // HardwareSerial SerialGPS(2);
 
-IMU imu(0x68, Accel_Sensitivity_t::g16, Gyro_Sensitivity_t::dps2000);
+IMU imu(
+    0x68,
+    Accel_Sensitivity_t::g16,
+    Gyro_Sensitivity_t::dps2000,
+    g16_x_offset,
+    g16_y_offset,
+    g16_z_offset,
+    dps2000_x_offset,
+    dps2000_y_offset,
+    dps2000_z_offset
+);
 Acceleration_Vec *acv_p = &imu.accel_vec;
 Euler_Rotation_Vec *erv_p = &imu.rotation_vec;
 
